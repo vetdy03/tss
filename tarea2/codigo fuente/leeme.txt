@@ -1,0 +1,2 @@
+al archivo main se debe de cambiar la extension .py
+EL SISTEMA NO ME PERMITIO SUBIRLO CON EXTENSIÓN DE .py
