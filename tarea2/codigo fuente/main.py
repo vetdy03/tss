@@ -3,7 +3,7 @@ import pandas as pd
 # Dimensiones de la plancha
 ANCHO_PLANCHA = 100
 ALTO_PLANCHA = 100
-
+TIPO_MATERIAL = 0
 # Piezas a cortar: (Nombre, Ancho, Alto)
 piezas = [
     ("A", 30, 20),
