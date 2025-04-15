@@ -1,52 +1,79 @@
+# Re-importamos las librerías después del reinicio del entorno
 import pandas as pd
 
-# Dimensiones de la plancha
-ANCHO_PLANCHA = 100
-ALTO_PLANCHA = 100
-TIPO_MATERIAL = 0
-# Piezas a cortar: (Nombre, Ancho, Alto)
+# Definimos las dimensiones del contenedor
+contenedor_ancho = 1.20
+contenedor_largo = 2.50
+
+# Lista de piezas con su ancho, largo y área (sin rotación inicialmente)
 piezas = [
-    ("A", 30, 20),
-    ("B", 50, 30),
-    ("C", 20, 10),
-    ("D", 40, 25),
-    ("E", 10, 10),
-    ("F", 15, 20),
-    ("G", 45, 30)
+    {"pieza": 1, "ancho": 0.50, "largo": 1.00, "area": 0.50},
+    {"pieza": 2, "ancho": 0.80, "largo": 0.60, "area": 0.48},
+    {"pieza": 3, "ancho": 0.30, "largo": 1.50, "area": 0.45},
+    {"pieza": 4, "ancho": 0.70, "largo": 0.90, "area": 0.63},
+    {"pieza": 5, "ancho": 0.40, "largo": 0.70, "area": 0.28},
+    {"pieza": 6, "ancho": 0.60, "largo": 0.50, "area": 0.30},
+    {"pieza": 7, "ancho": 0.90, "largo": 0.40, "area": 0.36},
+    {"pieza": 8, "ancho": 0.20, "largo": 2.00, "area": 0.40},
 ]
 
-# Ordenar piezas de mayor a menor área
-piezas.sort(key=lambda x: x[1] * x[2], reverse=True)
+# Inicializamos variables para el acomodo sin rotación
+ubicaciones = []
+x_actual = 0
+y_actual = 0
+altura_fila_actual = 0
 
-# Coordenadas donde se colocarán las piezas
-colocaciones = []
+# Intentamos colocar las piezas una por una (sin rotación)
+for p in piezas:
+    ancho = p["ancho"]
+    largo = p["largo"]
 
-x_cursor = 0
-y_cursor = 0
-fila_max_alto = 0
-
-for nombre, ancho, alto in piezas:
-    if x_cursor + ancho <= ANCHO_PLANCHA and y_cursor + alto <= ALTO_PLANCHA:
-        colocaciones.append((nombre, ancho, alto, x_cursor, y_cursor))
-        x_cursor += ancho
-        fila_max_alto = max(fila_max_alto, alto)
+    if x_actual + ancho <= contenedor_ancho:
+        ubicaciones.append({
+            "pieza": p["pieza"],
+            "x": x_actual,
+            "y": y_actual,
+            "ancho": ancho,
+            "largo": largo,
+            "rotada": False
+        })
+        altura_fila_actual = max(altura_fila_actual, largo)
+        x_actual += ancho
     else:
-        # Intentamos una nueva fila
-        x_cursor = 0
-        y_cursor += fila_max_alto
-        fila_max_alto = alto
-        if y_cursor + alto <= ALTO_PLANCHA:
-            colocaciones.append((nombre, ancho, alto, x_cursor, y_cursor))
-            x_cursor += ancho
+        # Mover a nueva fila
+        x_actual = 0
+        y_actual += altura_fila_actual
+        altura_fila_actual = largo
+
+        # Verificamos si cabe en la nueva fila
+        if y_actual + largo <= contenedor_largo:
+            ubicaciones.append({
+                "pieza": p["pieza"],
+                "x": x_actual,
+                "y": y_actual,
+                "ancho": ancho,
+                "largo": largo,
+                "rotada": False
+            })
+            x_actual += ancho
         else:
-            print(f"Pieza {nombre} no cabe en la plancha y fue descartada.")
+            # No cabe en el contenedor
+            ubicaciones.append({
+                "pieza": p["pieza"],
+                "x": None,
+                "y": None,
+                "ancho": ancho,
+                "largo": largo,
+                "rotada": False
+            })
 
-# Mostrar en consola
-print("Resultado de colocación de piezas:\n")
-for nombre, ancho, alto, x, y in colocaciones:
-    print(f"Pieza {nombre}: {ancho}x{alto} en posición ({x}, {y})")
+# Creamos DataFrame con los resultados
+df_ubicaciones = pd.DataFrame(ubicaciones)
+df_ubicaciones
 
-# Exportar a Excel
-df = pd.DataFrame(colocaciones, columns=["Pieza", "Ancho", "Alto", "X", "Y"])
-df.to_excel("output.xlsx", index=False)
-print("\nArchivo 'output.xlsx' generado con éxito.")
+
+# Guardar en archivo Excel
+output_path = "/mnt/data/acomodo_sin_rotacion.xlsx"
+df_ubicaciones.to_excel(output_path, index=False)
+output_path = "acomodo_sin_rotacion.xlsx"
+
